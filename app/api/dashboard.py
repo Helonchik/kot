@@ -69,6 +69,12 @@ async def server_settings(request: Request, guild_id: int, user: User = Depends(
         if r.get("name") != "@everyone" and not r.get("managed")
     ]
     
+    # Fetch recent Audit Logs
+    logs_result = await db.execute(
+        select(AuditLog).filter_by(guild_id=guild_id).order_by(AuditLog.id.desc()).limit(50)
+    )
+    audit_logs = logs_result.scalars().all()
+    
     # Create a roles map for easy lookup in templates
     roles_map = {int(r["id"]): r for r in roles}
     
@@ -79,7 +85,8 @@ async def server_settings(request: Request, guild_id: int, user: User = Depends(
         "rules": rules,
         "roles": filtered_roles,
         "roles_map": roles_map,
-        "channels": channels
+        "channels": channels,
+        "audit_logs": audit_logs
     })
 
 @router.post("/dashboard/servers/{guild_id}/settings")
