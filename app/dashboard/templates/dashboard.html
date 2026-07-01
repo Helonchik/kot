@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Discord Role Manager Pro{% endblock %}
+
+{% block layout %}
+<div class="flex h-screen overflow-hidden bg-darker">
+    
+    <!-- Sidebar -->
+    <aside class="w-64 glass flex flex-col hidden md:flex border-r border-gray-800">
+        <div class="p-6 flex items-center gap-3">
+            <i class="bi bi-robot text-2xl text-discord"></i>
+            <span class="text-xl font-bold tracking-tight">RoleManager</span>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="/dashboard" class="flex items-center gap-3 px-4 py-3 bg-discord/20 text-white rounded-lg transition-colors">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Overview
+            </a>
+            <div class="pt-4 pb-2">
+                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Your Servers</p>
+            </div>
+            {% for guild in guilds %}
+            <a href="/dashboard/servers/{{ guild.id }}" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                {% if guild.icon %}
+                    <img src="{{ guild.icon }}" alt="{{ guild.name }}" class="w-6 h-6 rounded-full">
+                {% else %}
+                    <div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white">
+                        {{ guild.name[0] }}
+                    </div>
+                {% endif %}
+                <span class="truncate">{{ guild.name }}</span>
+            </a>
+            {% endfor %}
+        </nav>
+        
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center gap-3 px-4 py-2">
+                {% if user.avatar %}
+                    <img src="https://cdn.discordapp.com/avatars/{{ user.id }}/{{ user.avatar }}.png" alt="Avatar" class="w-8 h-8 rounded-full">
+                {% else %}
+                    <div class="w-8 h-8 rounded-full bg-discord flex items-center justify-center">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                {% endif %}
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium">{{ user.username }}</span>
+                    <form action="/api/auth/logout" method="post" class="inline">
+                        <button type="submit" class="text-xs text-red-400 hover:text-red-300">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-8 relative">
+        <!-- Background decoration -->
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-discord rounded-full mix-blend-multiply filter blur-[200px] opacity-10 pointer-events-none"></div>
+        
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-white mb-1">Dashboard Overview</h1>
+                <p class="text-gray-400">Welcome back, {{ user.username }}!</p>
+            </div>
+        </header>
+        
+        <!-- Stats Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="glass p-6 rounded-xl flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                <div class="p-4 bg-blue-500/20 text-blue-400 rounded-lg">
+                    <i class="bi bi-hdd-network text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400 font-medium">Active Servers</p>
+                    <p class="text-2xl font-bold text-white">{{ total_guilds }}</p>
+                </div>
+            </div>
+            
+            <div class="glass p-6 rounded-xl flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                <div class="p-4 bg-green-500/20 text-green-400 rounded-lg">
+                    <i class="bi bi-people text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400 font-medium">Roles Assigned Today</p>
+                    <p class="text-2xl font-bold text-white">0</p>
+                </div>
+            </div>
+            
+            <div class="glass p-6 rounded-xl flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                <div class="p-4 bg-purple-500/20 text-purple-400 rounded-lg">
+                    <i class="bi bi-activity text-2xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-400 font-medium">Bot Latency</p>
+                    <p class="text-2xl font-bold text-white">12ms</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Area -->
+        <div class="glass rounded-xl p-8 text-center max-w-2xl mx-auto mt-16">
+            <i class="bi bi-magic text-5xl text-discord mb-4"></i>
+            <h2 class="text-2xl font-bold mb-2">Ready to automate?</h2>
+            <p class="text-gray-400 mb-6">Select a server from the sidebar to configure AutoRole rules and manage permissions.</p>
+            <a href="https://discord.com/api/oauth2/authorize?client_id={{ client_id }}&permissions=268435456&scope=bot" target="_blank" class="bg-discord hover:bg-discordHover text-white px-6 py-2 rounded-lg transition-colors inline-block font-medium">
+                <i class="bi bi-plus-lg mr-2"></i> Add Bot to Server
+            </a>
+        </div>
+    </main>
+</div>
+{% endblock %}

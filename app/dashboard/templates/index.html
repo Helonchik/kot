@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Discord Role Manager Pro{% endblock %}
+
+{% block layout %}
+<div class="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-discord rounded-full mix-blend-multiply filter blur-[150px] opacity-30 animate-pulse"></div>
+    <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-purple-600 rounded-full mix-blend-multiply filter blur-[150px] opacity-30 animate-pulse" style="animation-delay: 2s;"></div>
+
+    <div class="glass rounded-2xl p-10 max-w-md w-full relative z-10 shadow-2xl flex flex-col items-center transform transition-all hover:scale-105 duration-300">
+        <div class="bg-discord/20 p-4 rounded-full mb-6">
+            <i class="bi bi-robot text-5xl text-discord"></i>
+        </div>
+        
+        <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Role Manager Pro</h1>
+        <p class="text-gray-400 text-center mb-8">Automate your server with powerful role management tools.</p>
+        
+        <a href="/api/auth/login" class="w-full bg-discord hover:bg-discordHover text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-3">
+            <i class="bi bi-discord text-xl"></i>
+            Login with Discord
+        </a>
+    </div>
+</div>
+{% endblock %}

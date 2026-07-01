@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ guild.name }} - Settings{% endblock %}
+
+{% block layout %}
+<div class="flex h-screen overflow-hidden bg-darker">
+    
+    <!-- We would include the sidebar here, omitted for brevity, in a real app we'd use macros or layouts -->
+    <aside class="w-64 glass flex flex-col hidden md:flex border-r border-gray-800">
+        <div class="p-6 flex items-center gap-3">
+            <a href="/dashboard" class="text-gray-400 hover:text-white transition-colors">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <span class="text-lg font-bold tracking-tight truncate">{{ guild.name }}</span>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="#" class="flex items-center gap-3 px-4 py-3 bg-discord/20 text-white rounded-lg transition-colors">
+                <i class="bi bi-gear-fill"></i>
+                Settings
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                <i class="bi bi-tags-fill"></i>
+                Auto Roles
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                <i class="bi bi-journal-text"></i>
+                Audit Logs
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto p-8 relative" x-data="{ autoroleEnabled: {{ 'true' if settings.autorole_enabled else 'false' }} }">
+        <header class="mb-8 flex justify-between items-center border-b border-gray-800 pb-6">
+            <div class="flex items-center gap-4">
+                {% if guild.icon %}
+                    <img src="{{ guild.icon }}" alt="Icon" class="w-16 h-16 rounded-xl shadow-lg">
+                {% else %}
+                    <div class="w-16 h-16 rounded-xl bg-discord/20 flex items-center justify-center text-xl text-white font-bold">
+                        {{ guild.name[0] }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-1">{{ guild.name }}</h1>
+                    <p class="text-gray-400">Server Configuration</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Settings Form & Rules -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- General Settings Form -->
+                <form action="/dashboard/servers/{{ guild.id }}/settings" method="POST" class="glass rounded-xl p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="bi bi-toggle-on text-discord"></i> General Settings
+                    </h2>
+                    
+                    <div class="flex items-center justify-between py-4 border-b border-gray-800">
+                        <div>
+                            <p class="font-medium text-white">Enable AutoRole</p>
+                            <p class="text-sm text-gray-400">Automatically assign roles when users join.</p>
+                        </div>
+                        <input type="hidden" name="autorole_enabled" :value="autoroleEnabled ? 'true' : 'false'">
+                        <button type="button" @click="autoroleEnabled = !autoroleEnabled" :class="autoroleEnabled ? 'bg-discord' : 'bg-gray-600'" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none">
+                            <span :class="autoroleEnabled ? 'translate-x-6' : 'translate-x-1'" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"></span>
+                        </button>
+                    </div>
+                    
+                    <div class="py-4">
+                        <label class="block font-medium text-white mb-1">Log Channel</label>
+                        <p class="text-sm text-gray-400 mb-3">Select the channel to send audit logs to.</p>
+                        <select name="log_channel_id" class="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-discord outline-none transition-all">
+                            <option value="">No Log Channel</option>
+                            {% for channel in channels %}
+                                <option value="{{ channel.id }}" {% if settings.log_channel_id|string == channel.id|string %}selected{% endif %}>
+                                    #{{ channel.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" class="bg-discord hover:bg-discordHover text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Active AutoRole Rules -->
+                <div class="glass rounded-xl p-6">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="bi bi-tags-fill text-discord"></i> AutoRole Rules
+                    </h2>
+                    
+                    {% if not rules %}
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="bi bi-info-circle text-3xl mb-2 block"></i>
+                            No rules configured yet. Create one below!
+                        </div>
+                    {% else %}
+                        <div class="space-y-4">
+                            {% for rule in rules %}
+                                <div class="bg-dark/40 border border-gray-800 rounded-lg p-4 flex items-center justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-white">{{ rule.name }}</span>
+                                            <span class="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-400 uppercase font-semibold">
+                                                {% if rule.conditions.type == 'all' %}
+                                                    Everyone
+                                                {% elif rule.conditions.type == 'human' %}
+                                                    Humans Only
+                                                {% elif rule.conditions.type == 'bot' %}
+                                                    Bots Only
+                                                {% elif rule.conditions.type == 'user' %}
+                                                    Specific User (ID: {{ rule.conditions.user_id }})
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="text-sm text-gray-400 mt-1 flex items-center gap-2">
+                                            <span>Assigned Role:</span>
+                                            {% for role_id in rule.roles_to_assign %}
+                                                {% if role_id in roles_map %}
+                                                    <span class="px-2 py-0.5 rounded text-white text-xs font-medium" style="background-color: #{{ '%06x' % roles_map[role_id].color if roles_map[role_id].color else '5865F2' }}">
+                                                        {{ roles_map[role_id].name }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-xs">Unknown Role (ID: {{ role_id }})</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <form action="/dashboard/servers/{{ guild.id }}/rules/{{ rule.id }}/delete" method="POST">
+                                        <button type="submit" class="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2 rounded transition-colors">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Create Rule Form -->
+                <form action="/dashboard/servers/{{ guild.id }}/rules" method="POST" class="glass rounded-xl p-6" x-data="{ targetType: 'all' }">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="bi bi-plus-circle text-discord"></i> Create New Rule
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-medium text-white mb-1">Rule Name</label>
+                            <input type="text" name="name" placeholder="e.g. Give VIP to helper" required class="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-discord outline-none transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block font-medium text-white mb-1">Target Audience</label>
+                            <select name="target_type" x-model="targetType" class="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-discord outline-none transition-all">
+                                <option value="all">Everyone (All Joins)</option>
+                                <option value="human">Humans Only</option>
+                                <option value="bot">Bots Only</option>
+                                <option value="user">Specific User (by ID)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Specific User ID Input -->
+                    <div class="mt-4" x-show="targetType === 'user'" x-transition>
+                        <label class="block font-medium text-white mb-1">Target Discord User ID</label>
+                        <p class="text-xs text-gray-400 mb-2">Find the User ID in Discord by enabling Developer Mode, right-clicking their user icon, and choosing "Copy User ID".</p>
+                        <input type="text" name="user_id" placeholder="e.g. 860884917033107487" :required="targetType === 'user'" class="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-discord outline-none transition-all">
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="block font-medium text-white mb-2">Roles to Assign</label>
+                        <p class="text-xs text-gray-400 mb-3">Select one or more roles that should be given when this rule is triggered.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-dark/40 border border-gray-800 rounded-lg p-4 max-h-48 overflow-y-auto">
+                            {% for role in roles %}
+                                <label class="flex items-center gap-3 cursor-pointer p-2 hover:bg-white/5 rounded transition-all">
+                                    <input type="checkbox" name="role_ids" value="{{ role.id }}" class="accent-discord w-4 h-4 rounded border-gray-700 bg-dark focus:ring-discord">
+                                    <span class="px-2 py-0.5 rounded text-white text-xs font-semibold" style="background-color: #{{ '%06x' % role.color if role.color else '5865F2' }}">
+                                        {{ role.name }}
+                                    </span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 flex justify-end">
+                        <button type="submit" class="bg-discord hover:bg-discordHover text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                            <i class="bi bi-plus-lg mr-2"></i> Add Rule
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+            
+            <!-- Side Panel -->
+            <div class="space-y-6">
+                <div class="glass rounded-xl p-6 bg-gradient-to-br from-discord/10 to-transparent border-discord/20">
+                    <h3 class="font-bold text-white mb-2">Need help?</h3>
+                    <p class="text-sm text-gray-400 mb-4">Make sure the bot's role is positioned <strong>above</strong> the roles it needs to assign in your Discord Server Settings (Roles tab). Discord prevents bots from assigning roles that are higher than their own role.</p>
+                    <a href="https://support.discord.com/hc/en-us/articles/214836687-Role-Management-101" target="_blank" class="text-discord text-sm font-medium hover:underline">View Discord Role Guide &rarr;</a>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+</div>
+{% endblock %}
