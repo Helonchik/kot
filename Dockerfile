@@ -18,5 +18,4 @@ COPY . .
 # Expose FastAPI port
 EXPOSE 8000
 
-# Default command to run FastAPI (you'd typically use separate containers for the bot and celery in production)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "start.sh"]
